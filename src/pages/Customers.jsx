@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 
 export default function Customers() {
 
@@ -21,7 +22,7 @@ const loadCustomers = async () => {
     try {
 
         const response = await axios.get(
-            "http://localhost:5000/api/customer"
+            `${API_URL}/api/customer`
         );
 
         setCustomers(response.data.data);
@@ -84,7 +85,7 @@ const saveCustomer = async () => {
         if (id === 0) {
 
             await axios.post(
-                "http://localhost:5000/api/customer",
+                `${API_URL}api/customer`,
                 {
                     customer_name: customerName,
                     mobile_number: mobileNumber
@@ -97,7 +98,7 @@ const saveCustomer = async () => {
         else {
 
             await axios.put(
-                `http://localhost:5000/api/customer/${id}`,
+                `${API_URL}/api/customer/${id}`,
                 {
                     customer_name: customerName,
                     mobile_number: mobileNumber
@@ -149,7 +150,7 @@ const deleteCustomer = async (id) => {
     try {
 
         await axios.delete(
-            `http://localhost:5000/api/customer/${id}`
+            `${API_URL}/api/customer/${id}`
         );
 
         alert("Customer Deleted Successfully");

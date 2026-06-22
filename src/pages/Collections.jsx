@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 
 export default function Collections() {
 
@@ -29,7 +30,7 @@ const loadCustomers = async () => {
     try {
 
         const response = await axios.get(
-            "http://localhost:5000/api/customer"
+            `${API_URL}/api/customer`
         );
 
         setCustomers(response.data.data);
@@ -47,7 +48,7 @@ const loadCollections = async () => {
     try {
 
         const response = await axios.get(
-            "http://localhost:5000/api/collection"
+            `${API_URL}/api/collection`
         );
 
         setCollections(response.data.data);
@@ -97,7 +98,7 @@ const saveCollection = async () => {
         if (id === 0) {
 
             await axios.post(
-                "http://localhost:5000/api/collection",
+                `${API_URL}/api/collection`,
                 {
                     customer_id: customerId,
                     amount,
@@ -110,7 +111,7 @@ const saveCollection = async () => {
         } else {
 
             await axios.put(
-                `http://localhost:5000/api/collection/${id}`,
+                `${API_URL}/api/collection/${id}`,
                 {
                     customer_id: customerId,
                     amount,
@@ -159,7 +160,7 @@ const deleteCollection = async (id) => {
     try {
 
         await axios.delete(
-            `http://localhost:5000/api/collection/${id}`
+            `${API_URL}/api/collection/${id}`
         );
 
         alert("Collection Deleted Successfully");

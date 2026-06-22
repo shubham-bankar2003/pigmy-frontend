@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../config";
 
 export default function Reports() {
 
@@ -31,7 +32,7 @@ const loadReport = async () => {
     try {
 
         const response = await axios.get(
-            `http://localhost:5000/api/report/date/${date}`
+            `${API_URL}/api/report/date/${date}`
         );
 
         setData(response.data.data);
@@ -56,7 +57,7 @@ const downloadExcel = () => {
     }
 
     window.open(
-        `http://localhost:5000/api/report/export/${date}`,
+        `${API_URL}/api/report/export/${date}`,
         "_blank"
     );
 
@@ -83,7 +84,7 @@ const sendWhatsApp = async () => {
     try {
 
         const response = await axios.post(
-            "http://localhost:5000/api/report/send-whatsapp",
+            `h${API_URL}/api/report/send-whatsapp`,
             {
                 date,
                 mobile
