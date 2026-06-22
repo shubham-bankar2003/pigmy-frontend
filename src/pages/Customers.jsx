@@ -85,7 +85,7 @@ const saveCustomer = async () => {
         if (id === 0) {
 
             await axios.post(
-                `${API_URL}api/customer`,
+                `${API_URL}/api/customer`,
                 {
                     customer_name: customerName,
                     mobile_number: mobileNumber
