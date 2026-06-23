@@ -1,31 +1,45 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { API_URL } from "../config";
+import api from "../api";
 
 export default function Customers() {
 
 const navigate = useNavigate();
 
 const [id, setId] = useState(0);
-
 const [customerName, setCustomerName] = useState("");
-
 const [mobileNumber, setMobileNumber] = useState("");
-
 const [customers, setCustomers] = useState([]);
-
 const [searchText, setSearchText] = useState("");
+
+useEffect(() => {
+
+    const token =
+        localStorage.getItem("token");
+
+    if (!token) {
+
+        navigate("/login");
+        return;
+
+    }
+
+    loadCustomers();
+
+}, []);
 
 const loadCustomers = async () => {
 
     try {
 
-        const response = await axios.get(
-            `${API_URL}/api/customer`
-        );
+        const response =
+            await api.get(
+                "/api/customer"
+            );
 
-        setCustomers(response.data.data);
+        setCustomers(
+            response.data.data
+        );
 
     }
     catch (error) {
@@ -36,45 +50,52 @@ const loadCustomers = async () => {
 
 };
 
-useEffect(() => {
-
-    loadCustomers();
-
-}, []);
-
 const clearForm = () => {
 
     setId(0);
-
     setCustomerName("");
-
     setMobileNumber("");
 
 };
 
 const saveCustomer = async () => {
 
-    if (customerName.trim() === "") {
+    if (
+        customerName.trim() === ""
+    ) {
 
-        alert("Customer Name is required");
-
-        return;
-
-    }
-
-    if (customerName.length < 3) {
-
-        alert("Customer Name must be at least 3 characters");
+        alert(
+            "Customer Name Required"
+        );
 
         return;
 
     }
 
-    const mobileRegex = /^[0-9]{10}$/;
+    if (
+        customerName.length < 3
+    ) {
 
-    if (!mobileRegex.test(mobileNumber)) {
+        alert(
+            "Customer Name Must Be At Least 3 Characters"
+        );
 
-        alert("Enter valid 10 digit mobile number");
+        return;
+
+    }
+
+    const mobileRegex =
+        /^[0-9]{10}$/;
+
+    if (
+        !mobileRegex.test(
+            mobileNumber
+        )
+    ) {
+
+        alert(
+            "Enter Valid Mobile Number"
+        );
 
         return;
 
@@ -84,28 +105,36 @@ const saveCustomer = async () => {
 
         if (id === 0) {
 
-            await axios.post(
-                `${API_URL}/api/customer`,
+            await api.post(
+                "/api/customer",
                 {
-                    customer_name: customerName,
-                    mobile_number: mobileNumber
+                    customer_name:
+                        customerName,
+                    mobile_number:
+                        mobileNumber
                 }
             );
 
-            alert("Customer Added Successfully");
+            alert(
+                "Customer Added Successfully"
+            );
 
         }
         else {
 
-            await axios.put(
-                `${API_URL}/api/customer/${id}`,
+            await api.put(
+                `/api/customer/${id}`,
                 {
-                    customer_name: customerName,
-                    mobile_number: mobileNumber
+                    customer_name:
+                        customerName,
+                    mobile_number:
+                        mobileNumber
                 }
             );
 
-            alert("Customer Updated Successfully");
+            alert(
+                "Customer Updated Successfully"
+            );
 
         }
 
@@ -118,68 +147,91 @@ const saveCustomer = async () => {
 
         console.log(error);
 
-        alert("Error Saving Customer");
-
-    }
-
-};
-
-const editCustomer = (customer) => {
-
-    setId(customer.id);
-
-    setCustomerName(customer.customer_name);
-
-    setMobileNumber(customer.mobile_number);
-
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
-
-};
-
-const deleteCustomer = async (id) => {
-
-    if (!window.confirm("Are you sure you want to delete this customer?")) {
-
-        return;
-
-    }
-
-    try {
-
-        await axios.delete(
-            `${API_URL}/api/customer/${id}`
+        alert(
+            "Error Saving Customer"
         );
 
-        alert("Customer Deleted Successfully");
-
-        loadCustomers();
-
-    }
-    catch (error) {
-
-        console.log(error);
-
-        alert("Delete Failed");
-
     }
 
 };
 
-const filteredCustomers = customers.filter(customer =>
+const editCustomer =
+    (customer) => {
 
-    customer.customer_name
-        .toLowerCase()
-        .includes(searchText.toLowerCase())
+        setId(
+            customer.id
+        );
 
-    ||
+        setCustomerName(
+            customer.customer_name
+        );
 
-    customer.mobile_number
-        .includes(searchText)
+        setMobileNumber(
+            customer.mobile_number
+        );
 
-);
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+
+    };
+
+const deleteCustomer =
+    async (id) => {
+
+        if (
+            !window.confirm(
+                "Are You Sure?"
+            )
+        ) {
+
+            return;
+
+        }
+
+        try {
+
+            await api.delete(
+                `/api/customer/${id}`
+            );
+
+            alert(
+                "Customer Deleted Successfully"
+            );
+
+            loadCustomers();
+
+        }
+        catch (error) {
+
+            console.log(error);
+
+            alert(
+                "Delete Failed"
+            );
+
+        }
+
+    };
+
+const filteredCustomers =
+    customers.filter(
+        customer =>
+
+            customer.customer_name
+                .toLowerCase()
+                .includes(
+                    searchText.toLowerCase()
+                )
+
+            ||
+
+            customer.mobile_number
+                .includes(
+                    searchText
+                )
+    );
 
 return (
 
@@ -191,12 +243,39 @@ return (
                 Customer Management
             </h2>
 
-            <button
-                className="btn btn-secondary"
-                onClick={() => navigate('/')}
-            >
-                Back
-            </button>
+            <div className="d-flex gap-2">
+
+                <button
+                    className="btn btn-secondary"
+                    onClick={() =>
+                        navigate('/')
+                    }
+                >
+                    Back
+                </button>
+
+                <button
+                    className="btn btn-danger"
+                    onClick={() => {
+
+                        localStorage.removeItem(
+                            "token"
+                        );
+
+                        localStorage.removeItem(
+                            "userId"
+                        );
+
+                        navigate(
+                            "/login"
+                        );
+
+                    }}
+                >
+                    Logout
+                </button>
+
+            </div>
 
         </div>
 
@@ -215,10 +294,11 @@ return (
                         <input
                             type="text"
                             className="form-control"
-                            placeholder="Enter Customer Name"
                             value={customerName}
                             onChange={(e) =>
-                                setCustomerName(e.target.value)
+                                setCustomerName(
+                                    e.target.value
+                                )
                             }
                         />
 
@@ -234,11 +314,13 @@ return (
                             type="text"
                             maxLength="10"
                             className="form-control"
-                            placeholder="Enter Mobile Number"
                             value={mobileNumber}
                             onChange={(e) =>
                                 setMobileNumber(
-                                    e.target.value.replace(/\D/g, "")
+                                    e.target.value.replace(
+                                        /\D/g,
+                                        ""
+                                    )
                                 )
                             }
                         />
@@ -251,16 +333,22 @@ return (
 
                     <button
                         className="btn btn-primary"
-                        onClick={saveCustomer}
+                        onClick={
+                            saveCustomer
+                        }
                     >
-                        {id === 0
-                            ? "Save Customer"
-                            : "Update Customer"}
+                        {
+                            id === 0
+                                ? "Save Customer"
+                                : "Update Customer"
+                        }
                     </button>
 
                     <button
                         className="btn btn-warning"
-                        onClick={clearForm}
+                        onClick={
+                            clearForm
+                        }
                     >
                         Clear
                     </button>
@@ -290,10 +378,12 @@ return (
                         <input
                             type="text"
                             className="form-control"
-                            placeholder="Search Name or Mobile..."
+                            placeholder="Search..."
                             value={searchText}
                             onChange={(e) =>
-                                setSearchText(e.target.value)
+                                setSearchText(
+                                    e.target.value
+                                )
                             }
                         />
 
@@ -312,7 +402,10 @@ return (
                     </strong>
 
                     {" "}
-                    {filteredCustomers.length}
+
+                    {
+                        filteredCustomers.length
+                    }
 
                 </div>
 
@@ -325,13 +418,9 @@ return (
                             <tr>
 
                                 <th>ID</th>
-
                                 <th>Name</th>
-
                                 <th>Mobile</th>
-
                                 <th>Edit</th>
-
                                 <th>Delete</th>
 
                             </tr>
@@ -342,53 +431,73 @@ return (
 
                             {
                                 filteredCustomers.length > 0
+
                                     ?
-                                    filteredCustomers.map(customer => (
 
-                                        <tr key={customer.id}>
+                                    filteredCustomers.map(
+                                        customer => (
 
-                                            <td>
-                                                {customer.id}
-                                            </td>
+                                            <tr
+                                                key={
+                                                    customer.id
+                                                }
+                                            >
 
-                                            <td>
-                                                {customer.customer_name}
-                                            </td>
-
-                                            <td>
-                                                {customer.mobile_number}
-                                            </td>
-
-                                            <td>
-
-                                                <button
-                                                    className="btn btn-warning btn-sm w-100"
-                                                    onClick={() =>
-                                                        editCustomer(customer)
+                                                <td>
+                                                    {
+                                                        customer.id
                                                     }
-                                                >
-                                                    Edit
-                                                </button>
+                                                </td>
 
-                                            </td>
-
-                                            <td>
-
-                                                <button
-                                                    className="btn btn-danger btn-sm w-100"
-                                                    onClick={() =>
-                                                        deleteCustomer(customer.id)
+                                                <td>
+                                                    {
+                                                        customer.customer_name
                                                     }
-                                                >
-                                                    Delete
-                                                </button>
+                                                </td>
 
-                                            </td>
+                                                <td>
+                                                    {
+                                                        customer.mobile_number
+                                                    }
+                                                </td>
 
-                                        </tr>
+                                                <td>
 
-                                    ))
+                                                    <button
+                                                        className="btn btn-warning btn-sm w-100"
+                                                        onClick={() =>
+                                                            editCustomer(
+                                                                customer
+                                                            )
+                                                        }
+                                                    >
+                                                        Edit
+                                                    </button>
+
+                                                </td>
+
+                                                <td>
+
+                                                    <button
+                                                        className="btn btn-danger btn-sm w-100"
+                                                        onClick={() =>
+                                                            deleteCustomer(
+                                                                customer.id
+                                                            )
+                                                        }
+                                                    >
+                                                        Delete
+                                                    </button>
+
+                                                </td>
+
+                                            </tr>
+
+                                        )
+                                    )
+
                                     :
+
                                     <tr>
 
                                         <td

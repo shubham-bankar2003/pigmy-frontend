@@ -4,9 +4,29 @@ export default function Dashboard() {
 
 const navigate = useNavigate();
 
+const logout = () => {
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+
+    navigate("/login");
+
+};
+
 return (
 
     <div className="container py-4">
+
+        <div className="d-flex justify-content-end mb-3">
+
+            <button
+                className="btn btn-danger"
+                onClick={logout}
+            >
+                Logout
+            </button>
+
+        </div>
 
         <div className="text-center mb-5">
 
@@ -38,7 +58,9 @@ return (
 
                         <button
                             className="btn btn-primary w-100"
-                            onClick={() => navigate('/customers')}
+                            onClick={() =>
+                                navigate('/customers')
+                            }
                         >
                             Open Customers
                         </button>
@@ -65,7 +87,9 @@ return (
 
                         <button
                             className="btn btn-success w-100"
-                            onClick={() => navigate('/collections')}
+                            onClick={() =>
+                                navigate('/collections')
+                            }
                         >
                             Open Collections
                         </button>
@@ -92,7 +116,9 @@ return (
 
                         <button
                             className="btn btn-dark w-100"
-                            onClick={() => navigate('/reports')}
+                            onClick={() =>
+                                navigate('/reports')
+                            }
                         >
                             Open Reports
                         </button>

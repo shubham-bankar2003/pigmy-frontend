@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { useNavigate } from "react-router-dom";
-import { API_URL } from "../config";
 
 export default function Collections() {
 
@@ -20,6 +19,15 @@ const [filterDate, setFilterDate] = useState("");
 
 useEffect(() => {
 
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+
+        navigate("/login");
+        return;
+
+    }
+
     loadCustomers();
     loadCollections();
 
@@ -29,9 +37,9 @@ const loadCustomers = async () => {
 
     try {
 
-        const response = await axios.get(
-            `${API_URL}/api/customer`
-        );
+const response = await api.get(
+    "/api/customer"
+);
 
         setCustomers(response.data.data);
 
@@ -47,10 +55,9 @@ const loadCollections = async () => {
 
     try {
 
-        const response = await axios.get(
-            `${API_URL}/api/collection`
-        );
-
+  const response = await api.get(
+    "/api/collection"
+);
         setCollections(response.data.data);
 
     } catch (error) {
@@ -97,8 +104,8 @@ const saveCollection = async () => {
 
         if (id === 0) {
 
-            await axios.post(
-                `${API_URL}/api/collection`,
+          await api.post(
+    "/api/collection",
                 {
                     customer_id: customerId,
                     amount,
@@ -110,8 +117,8 @@ const saveCollection = async () => {
 
         } else {
 
-            await axios.put(
-                `${API_URL}/api/collection/${id}`,
+            await api.put(
+    `/api/collection/${id}`,
                 {
                     customer_id: customerId,
                     amount,
@@ -159,9 +166,9 @@ const deleteCollection = async (id) => {
 
     try {
 
-        await axios.delete(
-            `${API_URL}/api/collection/${id}`
-        );
+       await api.delete(
+    `/api/collection/${id}`
+);
 
         alert("Collection Deleted Successfully");
 
@@ -209,12 +216,30 @@ return (
                 Pigmy Collections
             </h2>
 
-            <button
-                className="btn btn-secondary"
-                onClick={() => navigate('/')}
-            >
-                Back
-            </button>
+   <div className="d-flex gap-2">
+
+    <button
+        className="btn btn-secondary"
+        onClick={() => navigate('/')}
+    >
+        Back
+    </button>
+
+    <button
+        className="btn btn-danger"
+        onClick={() => {
+
+            localStorage.removeItem("token");
+            localStorage.removeItem("userId");
+
+            navigate("/login");
+
+        }}
+    >
+        Logout
+    </button>
+
+</div>
 
         </div>
 
