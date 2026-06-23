@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
+// Import React Select
+import Select from "react-select";
 // Toast Imports
 import { ToastContainer, toast } from "react-toastify";
 
@@ -23,8 +25,8 @@ export default function Collections() {
     const itemsPerPage = 10;
 
     // Loader States
-    const [loadingData, setLoadingData] = useState(false); // Table aur Dropdown ke liye
-    const [loadingAction, setLoadingAction] = useState(""); // Values: "save", "delete-{id}", "logout"
+    const [loadingData, setLoadingData] = useState(false); 
+    const [loadingAction, setLoadingAction] = useState(""); 
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -35,7 +37,6 @@ export default function Collections() {
         initLoad();
     }, []);
 
-    // Dono initial APIs ek sath parallel load hongi fast speed ke liye
     const initLoad = async () => {
         setLoadingData(true);
         try {
@@ -150,13 +151,12 @@ export default function Collections() {
     };
 
     // --- FILTERING & PAGINATION LOGIC ---
-    // Added item.id and item.customer_mobile filtering
     const filteredCollections = collections.filter(item => {
         const searchMatch =
             (item.customer_name && item.customer_name.toLowerCase().includes(searchText.toLowerCase())) ||
             String(item.amount).includes(searchText) ||
             item.id?.toString().includes(searchText.trim()) || 
-            (item.customer_mobile && item.customer_mobile.toString().includes(searchText.trim())); // <--- Hya line mule Mobile No. ने search करता येईल
+            (item.customer_mobile && item.customer_mobile.toString().includes(searchText.trim())); 
 
         const dateMatch =
             filterDate === ""
@@ -166,7 +166,6 @@ export default function Collections() {
         return searchMatch && dateMatch;
     });
 
-    // Calculations based on filtered items
     const totalAmount = filteredCollections.reduce(
         (sum, item) => sum + Number(item.amount),
         0
@@ -176,9 +175,16 @@ export default function Collections() {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const paginatedCollections = filteredCollections.slice(startIndex, startIndex + itemsPerPage);
 
+    // --- TRANSFORM CUSTOMERS FOR SEARCHABLE DROPDOWN ---
+    const customerOptions = customers.map(customer => ({
+        value: String(customer.id),
+        label: `ID: ${customer.id} - ${customer.customer_name}`
+    }));
+
+    const selectedCustomerOption = customerOptions.find(opt => opt.value === String(customerId)) || null;
+
     return (
         <div className="container py-4">
-            {/* Global Toast Notification Container */}
             <ToastContainer position="top-right" autoClose={3000} />
 
             {/* Header Section */}
@@ -213,21 +219,39 @@ export default function Collections() {
             <div className="card shadow border-0">
                 <div className="card-body">
                     <div className="row g-3">
+                        {/* Searchable Customer Dropdown */}
                         <div className="col-12 col-md-4">
                             <label className="form-label">Customer</label>
-                            <select
-                                className="form-select"
-                                value={customerId}
-                                disabled={loadingAction === "save" || loadingData}
-                                onChange={(e) => setCustomerId(e.target.value)}
-                            >
-                                <option value="">{loadingData ? "Loading Customers..." : "Select Customer"}</option>
-                                {customers.map(customer => (
-                                    <option key={customer.id} value={customer.id}>
-                                        {customer.customer_name}
-                                    </option>
-                                ))}
-                            </select>
+                            <Select
+                                options={customerOptions}
+                                value={selectedCustomerOption}
+                                isLoading={loadingData}
+                                isDisabled={loadingAction === "save" || loadingData}
+                                onChange={(selectedOption) => setCustomerId(selectedOption ? selectedOption.value : "")}
+                                placeholder={loadingData ? "Loading Customers..." : "Select or Search Customer..."}
+                                isClearable={true}
+                                isSearchable={true}
+                                blurInputOnSelect={false} // Prevents mobile browsers from hiding keyboard early
+                                classNamePrefix="react-select" // Adds static hook for CSS targeting
+                                styles={{
+                                    control: (base) => ({
+                                        ...base,
+                                        minHeight: '38px',
+                                        borderRadius: '0.375rem',
+                                        borderColor: '#dee2e6',
+                                        boxShadow: 'none',
+                                        '&:hover': { borderColor: '#b1bbc4' }
+                                    }),
+                                    menu: (base) => ({
+                                        ...base,
+                                        zIndex: 9999 // Guarantees dropdown sits on top of all Bootstrap layers
+                                    }),
+                                    input: (base) => ({
+                                        ...base,
+                                        color: 'inherit' // Ensures typing indicator matches color setup
+                                    })
+                                }}
+                            />
                         </div>
 
                         <div className="col-12 col-md-4">
@@ -268,7 +292,7 @@ export default function Collections() {
                                 </>
                             ) : id === 0 ? (
                                 "Save Collection"
-                            ) : (
+                              ) : (
                                 "Update Collection"
                             )}
                         </button>
