@@ -83,13 +83,13 @@ const sendWhatsApp = async () => {
 
     try {
 
-        const response = await axios.post(
-            `h${API_URL}/api/report/send-whatsapp`,
-            {
-                date,
-                mobile
-            }
-        );
+const response = await api.post(
+    "/api/report/send-whatsapp",
+    {
+        date,
+        mobile
+    }
+);
 
         const whatsappUrl =
             `https://wa.me/${mobile}?text=` +
