@@ -1,239 +1,253 @@
 import { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { API_URL } from "../config";
+import api from "../api";
 
 export default function Reports() {
 
-const navigate = useNavigate();
+    const navigate = useNavigate();
 
-const [date, setDate] = useState("");
-const [mobile, setMobile] = useState("");
-const [data, setData] = useState([]);
+    const [date, setDate] = useState("");
+    const [mobile, setMobile] = useState("");
+    const [data, setData] = useState([]);
 
-const loadReport = async () => {
+    const loadReport = async () => {
 
-    if (!date) {
+        if (!date) {
 
-        alert("Please Select Date");
-        return;
+            alert("Please Select Date");
+            return;
 
-    }
+        }
 
-    const today = new Date().toISOString().split('T')[0];
+        const today = new Date().toISOString().split("T")[0];
 
-    if (date > today) {
+        if (date > today) {
 
-        alert("Future Date Not Allowed");
-        return;
+            alert("Future Date Not Allowed");
+            return;
 
-    }
+        }
 
-    try {
+        try {
 
-        const response = await axios.get(
-            `${API_URL}/api/report/date/${date}`
-        );
+            const response = await api.get(
+                `/api/report/date/${date}`
+            );
 
-        setData(response.data.data);
+            setData(response.data.data);
 
-    }
-    catch (error) {
+        }
+        catch (error) {
 
-        console.log(error);
-        alert("Failed To Load Report");
+            console.log(error);
 
-    }
+            alert("Failed To Load Report");
 
-};
+        }
 
-const downloadExcel = () => {
+    };
 
-    if (!date) {
+    const downloadExcel = async () => {
 
-        alert("Please Select Date");
-        return;
+        if (!date) {
 
-    }
+            alert("Please Select Date");
+            return;
 
-    window.open(
-        `${API_URL}/api/report/export/${date}`,
-        "_blank"
+        }
+
+        try {
+
+            const response = await api.get(
+                `/api/report/export/${date}`,
+                {
+                    responseType: "blob"
+                }
+            );
+
+            const url =
+                window.URL.createObjectURL(
+                    new Blob([response.data])
+                );
+
+            const link =
+                document.createElement("a");
+
+            link.href = url;
+
+            link.setAttribute(
+                "download",
+                `Pigmy_Report_${date}.xlsx`
+            );
+
+            document.body.appendChild(link);
+
+            link.click();
+
+            link.remove();
+
+        }
+        catch (error) {
+
+            console.log(error);
+
+            alert("Failed To Download Excel");
+
+        }
+
+    };
+
+    const sendWhatsApp = async () => {
+
+        if (!date) {
+
+            alert("Please Select Date");
+            return;
+
+        }
+
+        const mobileRegex = /^[0-9]{10,15}$/;
+
+        if (!mobileRegex.test(mobile)) {
+
+            alert("Enter Valid WhatsApp Number");
+            return;
+
+        }
+
+        try {
+
+            const response = await api.post(
+                "/api/report/send-whatsapp",
+                {
+                    date,
+                    mobile
+                }
+            );
+
+            const whatsappUrl =
+                `https://wa.me/${mobile}?text=` +
+                encodeURIComponent(
+                    response.data.message
+                );
+
+            window.open(
+                whatsappUrl,
+                "_blank"
+            );
+
+        }
+        catch (error) {
+
+            console.log(error);
+
+            alert("Failed To Send Report");
+
+        }
+
+    };
+
+    const totalAmount = data.reduce(
+        (sum, item) => sum + Number(item.amount),
+        0
     );
 
-};
+    return (
 
-const sendWhatsApp = async () => {
+        <div className="container py-4">
 
-    if (!date) {
+            <div className="d-flex justify-content-between align-items-center mb-4">
 
-        alert("Please Select Date");
-        return;
+                <h2 className="mb-0">
+                    Reports
+                </h2>
 
-    }
-
-    const mobileRegex = /^[0-9]{10,15}$/;
-
-    if (!mobileRegex.test(mobile)) {
-
-        alert("Enter Valid WhatsApp Number");
-        return;
-
-    }
-
-    try {
-
-const response = await api.post(
-    "/api/report/send-whatsapp",
-    {
-        date,
-        mobile
-    }
-);
-
-        const whatsappUrl =
-            `https://wa.me/${mobile}?text=` +
-            encodeURIComponent(response.data.message);
-
-        window.open(
-            whatsappUrl,
-            "_blank"
-        );
-
-    }
-    catch (error) {
-
-        console.log(error);
-        alert("Failed To Send Report");
-
-    }
-
-};
-
-const totalAmount = data.reduce(
-    (sum, item) => sum + Number(item.amount),
-    0
-);
-
-return (
-
-    <div className="container py-4">
-
-        <div className="d-flex justify-content-between align-items-center mb-4">
-
-            <h2 className="mb-0">
-                Reports
-            </h2>
-
-            <button
-                className="btn btn-secondary"
-                onClick={() => navigate('/')}
-            >
-                Back
-            </button>
-
-        </div>
-
-        <div className="card shadow border-0">
-
-            <div className="card-body">
-
-                <div className="row g-3">
-
-                    <div className="col-12 col-md-6">
-
-                        <label className="form-label">
-                            Select Date
-                        </label>
-
-                        <input
-                            type="date"
-                            className="form-control"
-                            max={new Date().toISOString().split('T')[0]}
-                            value={date}
-                            onChange={(e) =>
-                                setDate(e.target.value)
-                            }
-                        />
-
-                    </div>
-
-                    <div className="col-12 col-md-6">
-
-                        <label className="form-label">
-                            WhatsApp Number
-                        </label>
-
-                        <input
-                            type="text"
-                            className="form-control"
-                            placeholder="919876543210"
-                            value={mobile}
-                            onChange={(e) =>
-                                setMobile(
-                                    e.target.value.replace(/\D/g, "")
-                                )
-                            }
-                        />
-
-                    </div>
-
-                </div>
-
-                <div className="mt-4 d-flex flex-column flex-md-row gap-2">
-
-                    <button
-                        className="btn btn-primary"
-                        onClick={loadReport}
-                    >
-                        Load Report
-                    </button>
-
-                    <button
-                        className="btn btn-success"
-                        onClick={downloadExcel}
-                    >
-                        Download Excel
-                    </button>
-
-                    <button
-                        className="btn btn-dark"
-                        onClick={sendWhatsApp}
-                    >
-                        Send To WhatsApp
-                    </button>
-
-                </div>
+                <button
+                    className="btn btn-secondary"
+                    onClick={() => navigate("/")}
+                >
+                    Back
+                </button>
 
             </div>
 
-        </div>
+            <div className="card shadow border-0">
 
-        <div className="card shadow border-0 mt-4">
+                <div className="card-body">
 
-            <div className="card-header bg-white">
+                    <div className="row g-3">
 
-                <div className="row">
+                        <div className="col-12 col-md-6">
 
-                    <div className="col-md-6 col-12">
+                            <label className="form-label">
+                                Select Date
+                            </label>
 
-                        <strong>
-                            Total Records :
-                        </strong>
+                            <input
+                                type="date"
+                                className="form-control"
+                                max={
+                                    new Date()
+                                        .toISOString()
+                                        .split("T")[0]
+                                }
+                                value={date}
+                                onChange={(e) =>
+                                    setDate(
+                                        e.target.value
+                                    )
+                                }
+                            />
 
-                        {" "}
-                        {data.length}
+                        </div>
+
+                        <div className="col-12 col-md-6">
+
+                            <label className="form-label">
+                                WhatsApp Number
+                            </label>
+
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder="919876543210"
+                                value={mobile}
+                                onChange={(e) =>
+                                    setMobile(
+                                        e.target.value.replace(
+                                            /\D/g,
+                                            ""
+                                        )
+                                    )
+                                }
+                            />
+
+                        </div>
 
                     </div>
 
-                    <div className="col-md-6 col-12 text-md-end">
+                    <div className="mt-4 d-flex flex-column flex-md-row gap-2">
 
-                        <strong>
-                            Total Collection :
-                        </strong>
+                        <button
+                            className="btn btn-primary"
+                            onClick={loadReport}
+                        >
+                            Load Report
+                        </button>
 
-                        {" "}
-                        ₹ {totalAmount}
+                        <button
+                            className="btn btn-success"
+                            onClick={downloadExcel}
+                        >
+                            Download Excel
+                        </button>
+
+                        <button
+                            className="btn btn-dark"
+                            onClick={sendWhatsApp}
+                        >
+                            Send To WhatsApp
+                        </button>
 
                     </div>
 
@@ -241,64 +255,107 @@ return (
 
             </div>
 
-            <div className="card-body">
+            <div className="card shadow border-0 mt-4">
 
-                <div className="table-responsive">
+                <div className="card-header bg-white">
 
-                    <table className="table table-bordered table-hover">
+                    <div className="row">
 
-                        <thead className="table-dark">
+                        <div className="col-md-6 col-12">
 
-                            <tr>
+                            <strong>
+                                Total Records :
+                            </strong>{" "}
+                            {data.length}
 
-                                <th>Customer</th>
-                                <th>Amount</th>
-                                <th>Payment Mode</th>
+                        </div>
 
-                            </tr>
+                        <div className="col-md-6 col-12 text-md-end">
 
-                        </thead>
+                            <strong>
+                                Total Collection :
+                            </strong>{" "}
+                            ₹ {totalAmount}
 
-                        <tbody>
+                        </div>
 
-                            {
-                                data.length > 0
-                                    ?
-                                    data.map((item, index) => (
+                    </div>
 
-                                        <tr key={index}>
+                </div>
 
-                                            <td>
-                                                {item.customer_name}
-                                            </td>
+                <div className="card-body">
 
-                                            <td>
-                                                {item.amount}
-                                            </td>
+                    <div className="table-responsive">
 
-                                            <td>
-                                                {item.payment_mode}
+                        <table className="table table-bordered table-hover">
+
+                            <thead className="table-dark">
+
+                                <tr>
+
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Payment Mode</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                {
+                                    data.length > 0
+                                        ?
+                                        data.map(
+                                            (
+                                                item,
+                                                index
+                                            ) => (
+
+                                                <tr
+                                                    key={index}
+                                                >
+
+                                                    <td>
+                                                        {
+                                                            item.customer_name
+                                                        }
+                                                    </td>
+
+                                                    <td>
+                                                        {
+                                                            item.amount
+                                                        }
+                                                    </td>
+
+                                                    <td>
+                                                        {
+                                                            item.payment_mode
+                                                        }
+                                                    </td>
+
+                                                </tr>
+
+                                            )
+                                        )
+                                        :
+                                        <tr>
+
+                                            <td
+                                                colSpan="3"
+                                                className="text-center"
+                                            >
+                                                No Report Data Found
                                             </td>
 
                                         </tr>
+                                }
 
-                                    ))
-                                    :
-                                    <tr>
+                            </tbody>
 
-                                        <td
-                                            colSpan="3"
-                                            className="text-center"
-                                        >
-                                            No Report Data Found
-                                        </td>
+                        </table>
 
-                                    </tr>
-                            }
-
-                        </tbody>
-
-                    </table>
+                    </div>
 
                 </div>
 
@@ -306,8 +363,6 @@ return (
 
         </div>
 
-    </div>
-
-);
+    );
 
 }
