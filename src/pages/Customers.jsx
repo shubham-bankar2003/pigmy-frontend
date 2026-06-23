@@ -101,11 +101,9 @@ export default function Customers() {
         });
     };
 
-    const deleteCustomer = async (customerId) => {
-        // Confirmation before proceeding with the API call
-        const isConfirmed = window.confirm("Are you sure you want to delete this customer?");
-        if (!isConfirmed) return; 
-
+    // --- SWEET-STYLE CONFIRMATION & DELETE EXECUTION ---
+    const executeDelete = async (customerId, toastId) => {
+        toast.dismiss(toastId); // Confirmation toast ko close karne ke liye
         setLoadingAction(`delete-${customerId}`);
         try {
             await api.delete(`/api/customer/${customerId}`);
@@ -117,6 +115,43 @@ export default function Customers() {
         } finally {
             setLoadingAction("");
         }
+    };
+
+    const deleteCustomer = (customerId) => {
+        if (loadingAction !== "") return; // Agar koi action chal rha hai toh rok do
+
+        // Custom UI components matching a SweetAlert confirmation window
+        const ConfirmationToast = ({ closeToast, toastId }) => (
+            <div className="p-1 text-center">
+                <p className="mb-3 fw-bold text-dark" style={{ fontSize: "15px" }}>
+                    ⚠️ Are you sure you want to delete this customer?
+                </p>
+                <div className="d-flex gap-2 justify-content-center">
+                    <button 
+                        className="btn btn-sm btn-secondary px-3" 
+                        onClick={closeToast}
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        className="btn btn-sm btn-danger px-3" 
+                        onClick={() => executeDelete(customerId, toastId)}
+                    >
+                        Yes, Delete
+                    </button>
+                </div>
+            </div>
+        );
+
+        // Sweet UI Toast trigger
+        toast.info(<ConfirmationToast />, {
+            position: "top-center",
+            autoClose: false, // User choice ke bina close nahi hoga
+            closeOnClick: false,
+            draggable: false,
+            closeButton: false,
+            className: "shadow border-0 rounded-3 p-3 text-center"
+        });
     };
 
     const logout = () => {
@@ -210,7 +245,7 @@ export default function Customers() {
                                 <>
                                     <span className="spinner-border spinner-border-sm me-2" role="status"></span>
                                     Saving...
-                               Sig</>
+                                </>
                             ) : id === 0 ? (
                                 "Save Customer"
                             ) : (
