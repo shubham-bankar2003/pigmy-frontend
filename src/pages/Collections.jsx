@@ -90,19 +90,17 @@ export default function Collections() {
 
         setLoadingAction("save");
         try {
+            const payload = {
+                customer_id: customerId,
+                amount,
+                payment_mode: paymentMode
+            };
+
             if (id === 0) {
-                await api.post("/api/collection", {
-                    customer_id: customerId,
-                    amount,
-                    payment_mode: paymentMode
-                });
+                await api.post("/api/collection", payload);
                 toast.success("Collection Added Successfully");
             } else {
-                await api.put(`/api/collection/${id}`, {
-                    customer_id: customerId,
-                    amount,
-                    payment_mode: paymentMode
-                });
+                await api.put(`/api/collection/${id}`, payload);
                 toast.success("Collection Updated Successfully");
             }
             clearForm();
@@ -128,6 +126,10 @@ export default function Collections() {
     };
 
     const deleteCollection = async (collectionId) => {
+        // Confirmation alert box before deletion
+        const isConfirmed = window.confirm("Are you sure you want to delete this collection entry?");
+        if (!isConfirmed) return;
+
         setLoadingAction(`delete-${collectionId}`);
         try {
             await api.delete(`/api/collection/${collectionId}`);
@@ -231,8 +233,8 @@ export default function Collections() {
                                 placeholder={loadingData ? "Loading Customers..." : "Select or Search Customer..."}
                                 isClearable={true}
                                 isSearchable={true}
-                                blurInputOnSelect={false} // Prevents mobile browsers from hiding keyboard early
-                                classNamePrefix="react-select" // Adds static hook for CSS targeting
+                                blurInputOnSelect={false}
+                                classNamePrefix="react-select"
                                 styles={{
                                     control: (base) => ({
                                         ...base,
@@ -244,11 +246,11 @@ export default function Collections() {
                                     }),
                                     menu: (base) => ({
                                         ...base,
-                                        zIndex: 9999 // Guarantees dropdown sits on top of all Bootstrap layers
+                                        zIndex: 9999
                                     }),
                                     input: (base) => ({
                                         ...base,
-                                        color: 'inherit' // Ensures typing indicator matches color setup
+                                        color: 'inherit'
                                     })
                                 }}
                             />
@@ -292,7 +294,7 @@ export default function Collections() {
                                 </>
                             ) : id === 0 ? (
                                 "Save Collection"
-                              ) : (
+                            ) : (
                                 "Update Collection"
                             )}
                         </button>

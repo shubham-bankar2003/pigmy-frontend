@@ -102,6 +102,10 @@ export default function Customers() {
     };
 
     const deleteCustomer = async (customerId) => {
+        // Confirmation before proceeding with the API call
+        const isConfirmed = window.confirm("Are you sure you want to delete this customer?");
+        if (!isConfirmed) return; 
+
         setLoadingAction(`delete-${customerId}`);
         try {
             await api.delete(`/api/customer/${customerId}`);
@@ -206,7 +210,7 @@ export default function Customers() {
                                 <>
                                     <span className="spinner-border spinner-border-sm me-2" role="status"></span>
                                     Saving...
-                                </>
+                               Sig</>
                             ) : id === 0 ? (
                                 "Save Customer"
                             ) : (
