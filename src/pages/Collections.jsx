@@ -150,10 +150,13 @@ export default function Collections() {
     };
 
     // --- FILTERING & PAGINATION LOGIC ---
+    // Added item.id and item.customer_mobile filtering
     const filteredCollections = collections.filter(item => {
         const searchMatch =
             (item.customer_name && item.customer_name.toLowerCase().includes(searchText.toLowerCase())) ||
-            String(item.amount).includes(searchText);
+            String(item.amount).includes(searchText) ||
+            item.id?.toString().includes(searchText.trim()) || 
+            (item.customer_mobile && item.customer_mobile.toString().includes(searchText.trim())); // <--- Hya line mule Mobile No. ने search करता येईल
 
         const dateMatch =
             filterDate === ""
@@ -288,7 +291,7 @@ export default function Collections() {
                             <input
                                 type="text"
                                 className="form-control"
-                                placeholder="Search Customer Or Amount..."
+                                placeholder="Search by ID, Name, Mobile or Amount..."
                                 value={searchText}
                                 onChange={(e) => {
                                     setSearchText(e.target.value);
@@ -346,7 +349,12 @@ export default function Collections() {
                                     paginatedCollections.map(collection => (
                                         <tr key={collection.id}>
                                             <td>{collection.id}</td>
-                                            <td>{collection.customer_name}</td>
+                                            <td>
+                                                <div>{collection.customer_name}</div>
+                                                {collection.customer_mobile && (
+                                                    <small className="text-muted d-block">{collection.customer_mobile}</small>
+                                                )}
+                                            </td>
                                             <td>₹ {collection.amount}</td>
                                             <td>
                                                 <span className={`badge ${collection.payment_mode === 'Cash' ? 'bg-outline-primary text-primary border border-primary' : 'bg-outline-success text-success border border-success'} px-2 py-1`}>
