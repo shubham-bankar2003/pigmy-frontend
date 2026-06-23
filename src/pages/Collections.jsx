@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import Select from "react-select";
 // Toast Imports
 import { ToastContainer, toast } from "react-toastify";
+// SweetAlert2 Import
+import Swal from "sweetalert2";
 
 export default function Collections() {
     const navigate = useNavigate();
@@ -125,10 +127,25 @@ export default function Collections() {
         });
     };
 
+    // --- UPDATED BEAUTIFUL DELETE LOGIC ---
     const deleteCollection = async (collectionId) => {
-        // Confirmation alert box before deletion
-        const isConfirmed = window.confirm("Are you sure you want to delete this collection entry?");
-        if (!isConfirmed) return;
+        const result = await Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this collection entry!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#dc3545", // Match Bootstrap btn-danger
+            cancelButtonColor: "#6c757d",  // Match Bootstrap btn-secondary
+            confirmButtonText: "Yes, delete it!",
+            cancelButtonText: "Cancel",
+            background: "#fff",
+            customClass: {
+                popup: "rounded-3 shadow border-0" // Perfectly matches your card styles
+            }
+        });
+
+        // If the user clicks cancel, do nothing
+        if (!result.isConfirmed) return;
 
         setLoadingAction(`delete-${collectionId}`);
         try {
@@ -291,7 +308,7 @@ export default function Collections() {
                                 <>
                                     <span className="spinner-border spinner-border-sm me-2" role="status"></span>
                                     Saving...
-                                </>
+                                Honora </>
                             ) : id === 0 ? (
                                 "Save Collection"
                             ) : (
