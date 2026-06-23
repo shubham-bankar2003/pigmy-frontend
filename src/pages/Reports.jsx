@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
+// Toast Imports
+import { ToastContainer, toast } from "react-toastify";
 
 export default function Reports() {
     const navigate = useNavigate();
@@ -13,34 +15,49 @@ export default function Reports() {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    // Loading State for distinct actions
+    const [loadingAction, setLoadingAction] = useState(""); // Values: "load", "excel", "whatsapp"
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            navigate("/login");
+        }
+    }, [navigate]);
+
     const loadReport = async () => {
         if (!date) {
-            alert("Please Select Date");
+            toast.warn("Please Select a Date");
             return;
         }
 
         const today = new Date().toISOString().split("T")[0];
         if (date > today) {
-            alert("Future Date Not Allowed");
+            toast.warn("Future Dates Are Not Allowed");
             return;
         }
 
+        setLoadingAction("load");
         try {
             const response = await api.get(`/api/report/date/${date}`);
             setData(response.data.data);
-            setCurrentPage(1); // Naya data load hote hi Page 1 par reset karein
+            setCurrentPage(1); // Reset to Page 1 on fresh search
+            toast.success("Report Loaded Successfully");
         } catch (error) {
             console.log(error);
-            alert("Failed To Load Report");
+            toast.error("Failed To Load Report");
+        } finally {
+            setLoadingAction("");
         }
     };
 
     const downloadExcel = async () => {
         if (!date) {
-            alert("Please Select Date");
+            toast.warn("Please Select a Date");
             return;
         }
 
+        setLoadingAction("excel");
         try {
             const response = await api.get(`/api/report/export/${date}`, {
                 responseType: "blob"
@@ -53,24 +70,29 @@ export default function Reports() {
             document.body.appendChild(link);
             link.click();
             link.remove();
+            window.URL.revokeObjectURL(url);
+            toast.success("Excel Downloaded Successfully");
         } catch (error) {
             console.log(error);
-            alert("Failed To Download Excel");
+            toast.error("Failed To Download Excel");
+        } finally {
+            setLoadingAction("");
         }
     };
 
     const sendWhatsApp = async () => {
         if (!date) {
-            alert("Please Select Date");
+            toast.warn("Please Select a Date");
             return;
         }
 
         const mobileRegex = /^[0-9]{10,15}$/;
         if (!mobileRegex.test(mobile)) {
-            alert("Enter Valid WhatsApp Number");
+            toast.warn("Enter a Valid WhatsApp Number");
             return;
         }
 
+        setLoadingAction("whatsapp");
         try {
             const response = await api.post("/api/report/send-whatsapp", {
                 date,
@@ -82,9 +104,12 @@ export default function Reports() {
                 encodeURIComponent(response.data.message);
 
             window.open(whatsappUrl, "_blank");
+            toast.success("Redirecting to WhatsApp...");
         } catch (error) {
             console.log(error);
-            alert("Failed To Send Report");
+            toast.error("Failed To Send Report");
+        } finally {
+            setLoadingAction("");
         }
     };
 
@@ -97,9 +122,16 @@ export default function Reports() {
 
     return (
         <div className="container py-4">
+            {/* Toast System Global Container */}
+            <ToastContainer position="top-right" autoClose={3000} />
+
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2 className="mb-0">Reports</h2>
-                <button className="btn btn-secondary" onClick={() => navigate("/")}>
+                <button 
+                    className="btn btn-secondary" 
+                    onClick={() => navigate("/")}
+                    disabled={loadingAction !== ""}
+                >
                     Back
                 </button>
             </div>
@@ -115,6 +147,7 @@ export default function Reports() {
                                 className="form-control"
                                 max={new Date().toISOString().split("T")[0]}
                                 value={date}
+                                disabled={loadingAction !== ""}
                                 onChange={(e) => setDate(e.target.value)}
                             />
                         </div>
@@ -126,20 +159,56 @@ export default function Reports() {
                                 className="form-control"
                                 placeholder="919876543210"
                                 value={mobile}
+                                disabled={loadingAction !== ""}
                                 onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
                             />
                         </div>
                     </div>
 
                     <div className="mt-4 d-flex flex-column flex-md-row gap-2">
-                        <button className="btn btn-primary" onClick={loadReport}>
-                            Load Report
+                        <button 
+                            className="btn btn-primary" 
+                            onClick={loadReport}
+                            disabled={loadingAction !== ""}
+                        >
+                            {loadingAction === "load" ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    Loading Report...
+                                </>
+                            ) : (
+                                "Load Report"
+                            )}
                         </button>
-                        <button className="btn btn-success" onClick={downloadExcel}>
-                            Download Excel
+                        
+                        <button 
+                            className="btn btn-success" 
+                            onClick={downloadExcel}
+                            disabled={loadingAction !== ""}
+                        >
+                            {loadingAction === "excel" ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    Exporting...
+                                </>
+                            ) : (
+                                "Download Excel"
+                            )}
                         </button>
-                        <button className="btn btn-dark" onClick={sendWhatsApp}>
-                            Send To WhatsApp
+
+                        <button 
+                            className="btn btn-dark" 
+                            onClick={sendWhatsApp}
+                            disabled={loadingAction !== ""}
+                        >
+                            {loadingAction === "whatsapp" ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    Sending...
+                                </>
+                            ) : (
+                                "Send To WhatsApp"
+                            )}
                         </button>
                     </div>
                 </div>
@@ -169,17 +238,28 @@ export default function Reports() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {data.length > 0 ? (
+                                {loadingAction === "load" ? (
+                                    <tr>
+                                        <td colSpan="3" className="text-center py-4">
+                                            <div className="spinner-border text-primary" role="status"></div>
+                                            <div className="mt-2 text-muted">Fetching report details...</div>
+                                        </td>
+                                    </tr>
+                                ) : paginatedData.length > 0 ? (
                                     paginatedData.map((item, index) => (
                                         <tr key={index}>
                                             <td>{item.customer_name}</td>
-                                            <td>{item.amount}</td>
-                                            <td>{item.payment_mode}</td>
+                                            <td>₹ {item.amount}</td>
+                                            <td>
+                                                <span className={`badge ${item.payment_mode === 'Cash' ? 'bg-outline-primary text-primary border border-primary' : 'bg-outline-success text-success border border-success'} px-2 py-1`}>
+                                                    {item.payment_mode}
+                                                </span>
+                                            </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="3" className="text-center">
+                                        <td colSpan="3" className="text-center py-3">
                                             No Report Data Found
                                         </td>
                                     </tr>
@@ -197,14 +277,14 @@ export default function Reports() {
                             <div className="d-flex gap-2">
                                 <button
                                     className="btn btn-secondary btn-sm"
-                                    disabled={currentPage === 1}
+                                    disabled={currentPage === 1 || loadingAction !== ""}
                                     onClick={() => setCurrentPage(currentPage - 1)}
                                 >
                                     Previous
                                 </button>
                                 <button
                                     className="btn btn-secondary btn-sm"
-                                    disabled={currentPage === totalPages || totalPages === 0}
+                                    disabled={currentPage === totalPages || totalPages === 0 || loadingAction !== ""}
                                     onClick={() => setCurrentPage(currentPage + 1)}
                                 >
                                     Next
