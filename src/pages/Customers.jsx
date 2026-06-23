@@ -125,11 +125,12 @@ export default function Customers() {
     };
 
     // --- PAGINATION & FILTERING LOGIC ---
-    // Safely handling null/undefined values using optional chaining (?.)
+    // Added customer.id string filtering to search by Name, Mobile, or ID
     const filteredCustomers = customers.filter(
         customer =>
             customer.customer_name?.toLowerCase().includes(searchText.toLowerCase()) ||
-            (customer.mobile_number && customer.mobile_number.includes(searchText))
+            (customer.mobile_number && customer.mobile_number.includes(searchText)) ||
+            customer.id?.toString().includes(searchText.trim())
     );
 
     const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
@@ -205,7 +206,7 @@ export default function Customers() {
                                 <>
                                     <span className="spinner-border spinner-border-sm me-2" role="status"></span>
                                     Saving...
-                                Rachit</>
+                                </>
                             ) : id === 0 ? (
                                 "Save Customer"
                             ) : (
@@ -234,7 +235,7 @@ export default function Customers() {
                             <input
                                 type="text"
                                 className="form-control"
-                                placeholder="Search..."
+                                placeholder="Search by Name, Mobile or ID..."
                                 value={searchText}
                                 onChange={(e) => {
                                     setSearchText(e.target.value);
