@@ -12,6 +12,10 @@ const [mobileNumber, setMobileNumber] = useState("");
 const [customers, setCustomers] = useState([]);
 const [searchText, setSearchText] = useState("");
 
+const [currentPage, setCurrentPage] = useState(1);
+
+const itemsPerPage = 10;
+
 useEffect(() => {
 
     const token =
@@ -233,6 +237,21 @@ const filteredCustomers =
                 )
     );
 
+const totalPages = Math.ceil(
+    filteredCustomers.length /
+    itemsPerPage
+);
+
+const startIndex =
+    (currentPage - 1) *
+    itemsPerPage;
+
+const paginatedCustomers =
+    filteredCustomers.slice(
+        startIndex,
+        startIndex + itemsPerPage
+    );
+
 return (
 
     <div className="container py-4">
@@ -295,11 +314,15 @@ return (
                             type="text"
                             className="form-control"
                             value={customerName}
-                            onChange={(e) =>
-                                setCustomerName(
-                                    e.target.value
-                                )
-                            }
+                            onChange={(e) => {
+
+    setSearchText(
+        e.target.value
+    );
+
+    setCurrentPage(1);
+
+}}
                         />
 
                     </div>
@@ -434,7 +457,7 @@ return (
 
                                     ?
 
-                                    filteredCustomers.map(
+                                    paginatedCustomers.map(
                                         customer => (
 
                                             <tr
