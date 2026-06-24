@@ -76,7 +76,7 @@ export default function Login() {
 
     return (
         <div 
-            className="container-fluid d-flex align-items-center justify-content-center min-vh-100 bg-lightpx-3" 
+            className="container-fluid d-flex align-items-center justify-content-center min-vh-100" 
             style={{ backgroundColor: "#f4f6f9", minHeight: "100vh" }}
         >
             {/* Notification Center Layer */}
@@ -90,20 +90,21 @@ export default function Login() {
                     <div 
                         className="text-center p-4 text-white d-flex flex-column align-items-center justify-content-center"
                         style={{ 
-                            background: "linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)",
+                            background: "linear-gradient(135deg, #112233 0%, #1e3c72 100%)",
                             borderBottomLeftRadius: "1.5rem",
                             borderBottomRightRadius: "1.5rem"
                         }}
                     >
+                        {/* Professional Banking Icon Container */}
                         <div 
-                            className="bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center mb-2"
-                            style={{ width: "60px", height: "60px", fontSize: "1.8rem" }}
+                            className="bg-white bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mb-2"
+                            style={{ width: "65px", height: "65px", fontSize: "2rem", border: "1px solid rgba(255,255,255,0.2)" }}
                         >
-                            🐷
+                            🏦
                         </div>
-                        <h3 className="fw-bold m-0 tracking-wide">Pigmy Collection</h3>
+                        <h3 className="fw-bold m-0 tracking-wide">Pigmy Finance</h3>
                         <small className="text-white-50 text-uppercase tracking-wider font-monospace" style={{ fontSize: "0.75rem" }}>
-                            Secure Agent Gateway
+                            Core Collection Module
                         </small>
                     </div>
 
@@ -115,7 +116,7 @@ export default function Login() {
                                 Registered Mobile Number
                             </label>
                             <div className="input-group input-group-lg border-2">
-                                <span className="input-group-text bg-light border-end-0 text-muted fs-6 fw-bold">+91</span>
+                                <span className="input-group-text bg-light border-end-0 text-muted fs-6 fw-bold">🇮🇳 +91</span>
                                 <input
                                     type="text"
                                     className="form-control bg-light border-start-0 fw-bold tracking-wide"
@@ -133,7 +134,7 @@ export default function Login() {
                         {/* Logic Action Switch Button Viewport */}
                         {!otpSent && (
                             <button
-                                className="btn btn-primary btn-lg w-100 py-3 fw-bold rounded-3 shadow-sm transition-all"
+                                className="btn btn-primary btn-lg w-100 py-3 fw-bold rounded-3 shadow-sm"
                                 style={{ background: "#1e3c72", border: "none" }}
                                 onClick={sendOtp}
                                 disabled={loading}
@@ -149,7 +150,7 @@ export default function Login() {
                             </button>
                         )}
 
-                        {/* Secondary Viewport Condition Layer Hook: OTP Verification Verification field block */}
+                        {/* Secondary Viewport Condition Layer Hook: OTP Verification */}
                         {otpSent && (
                             <div className="animate-fade-in">
                                 <div className="mb-4 p-3 bg-light rounded-3 border border-warning border-opacity-50 text-center">
@@ -205,7 +206,7 @@ export default function Login() {
 
                 {/* Secure footer branding details block layer */}
                 <div className="text-center mt-4 text-muted small">
-                    <p className="m-0">🔒 End-to-End Encrypted Node Connection</p>
+                    <p className="m-0">🔒 System Secure Banking Node Connection</p>
                     <span className="font-monospace text-uppercase" style={{ fontSize: "0.65rem" }}>Ver. 2026.2.14</span>
                 </div>
             </div>
