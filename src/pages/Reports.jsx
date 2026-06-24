@@ -137,39 +137,19 @@ export default function Reports() {
 
         setLoadingAction("whatsapp");
         try {
+            // Fetch the formatted table text layout directly from the backend response
             const response = await api.post("/api/report/send-whatsapp", {
                 date,
-                mobile,
-                summary: {
-                    cashTotal,
-                    onlineTotal,
-                    grandTotal,
-                    totalRecords: groupedData.length
-                }
+                mobile
             });
 
-            let messageText = `*📊 CONSOLIDATED PIGMY REPORT*\n`;
-            messageText += `📅 *Date:* ${date}\n`;
-            messageText += `------------------------------------------\n\n`;
-            
-            messageText += `*👤 Customer Breakdown:*\n`;
-            groupedData.forEach((item, index) => {
-                const cash = item.cashAmount > 0 ? `₹${item.cashAmount}` : "-";
-                const online = item.onlineAmount > 0 ? `₹${item.onlineAmount}` : "-";
-                messageText += `${index + 1}. *${item.customer_name}*\n   • Cash: ${cash} | Online: ${online} | Total: ₹${item.totalAmount}\n`;
-            });
-
-            messageText += `\n------------------------------------------\n`;
-            messageText += `💵 *Total Cash:* ₹${cashTotal}\n`;
-            messageText += `📱 *Total Online:* ₹${onlineTotal}\n`;
-            messageText += `⭐ *GRAND TOTAL:* ₹${grandTotal}\n`;
-            messageText += `------------------------------------------\n`;
-            messageText += `_Generated automatically via Pigmy System._`;
+            // Extracts the exact matrix table structure compiled by Node.js
+            const messageText = response.data.message;
 
             const whatsappUrl = `https://wa.me/${mobile}?text=${encodeURIComponent(messageText)}`;
 
             window.open(whatsappUrl, "_blank");
-            toast.success("Redirecting to WhatsApp... Check message format.");
+            toast.success("Redirecting to WhatsApp...");
         } catch (error) {
             console.log(error);
             toast.error("Failed To Send Report");
