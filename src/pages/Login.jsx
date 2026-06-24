@@ -28,7 +28,6 @@ export default function Login() {
 
             toast.success("OTP Sent Successfully!");
             
-            // AUTOFILL LOGIC: Agar backend se response mein OTP aa raha hai, toh auto-fill kar dein
             if (response.data && response.data.otp) {
                 setOtp(response.data.otp.toString()); 
                 toast.info(`Autofilled Dev OTP: ${response.data.otp}`);
@@ -64,7 +63,6 @@ export default function Login() {
 
             toast.success("Login Successful! Redirecting...");
             
-            // Chhota sa delay taaki user success toast dekh sake
             setTimeout(() => {
                 navigate("/");
             }, 1500);
@@ -77,81 +75,138 @@ export default function Login() {
     };
 
     return (
-        <div className="container">
-            {/* ToastContainer ko poore page par toasts render karne ke liye top par rakha hai */}
-            <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+        <div 
+            className="container-fluid d-flex align-items-center justify-content-center min-vh-100 bg-lightpx-3" 
+            style={{ backgroundColor: "#f4f6f9", minHeight: "100vh" }}
+        >
+            {/* Notification Center Layer */}
+            <ToastContainer position="top-center" autoClose={2500} hideProgressBar={true} />
 
-            <div className="row justify-content-center mt-5">
-                <div className="col-md-5">
-                    <div className="card shadow">
-                        <div className="card-body">
-                            <h2 className="text-center mb-4">Pigmy Login</h2>
+            <div className="w-100" style={{ maxWidth: "420px" }}>
+                {/* Mobile App View Frame Card Container */}
+                <div className="card border-0 shadow-lg overflow-hidden rounded-4 bg-white">
+                    
+                    {/* Native App Top Visual Header Accent Block */}
+                    <div 
+                        className="text-center p-4 text-white d-flex flex-column align-items-center justify-content-center"
+                        style={{ 
+                            background: "linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)",
+                            borderBottomLeftRadius: "1.5rem",
+                            borderBottomRightRadius: "1.5rem"
+                        }}
+                    >
+                        <div 
+                            className="bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center mb-2"
+                            style={{ width: "60px", height: "60px", fontSize: "1.8rem" }}
+                        >
+                            🐷
+                        </div>
+                        <h3 className="fw-bold m-0 tracking-wide">Pigmy Collection</h3>
+                        <small className="text-white-50 text-uppercase tracking-wider font-monospace" style={{ fontSize: "0.75rem" }}>
+                            Secure Agent Gateway
+                        </small>
+                    </div>
 
-                            <div className="mb-3">
-                                <label>Mobile Number</label>
+                    <div className="card-body p-4 pt-4">
+                        
+                        {/* Mobile Field Entry: Mobile Number */}
+                        <div className="mb-4">
+                            <label className="form-label fw-bold text-secondary small text-uppercase tracking-wider">
+                                Registered Mobile Number
+                            </label>
+                            <div className="input-group input-group-lg border-2">
+                                <span className="input-group-text bg-light border-end-0 text-muted fs-6 fw-bold">+91</span>
                                 <input
                                     type="text"
-                                    className="form-control"
+                                    className="form-control bg-light border-start-0 fw-bold tracking-wide"
+                                    placeholder="Enter 10 digits"
+                                    inputMode="numeric"
                                     maxLength="10"
                                     disabled={otpSent || loading}
                                     value={mobileNumber}
-                                    onChange={(e) =>
-                                        setMobileNumber(e.target.value.replace(/\D/g, ""))
-                                    }
+                                    onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ""))}
+                                    style={{ fontSize: "1.1rem" }}
                                 />
                             </div>
+                        </div>
 
-                            {!otpSent && (
+                        {/* Logic Action Switch Button Viewport */}
+                        {!otpSent && (
+                            <button
+                                className="btn btn-primary btn-lg w-100 py-3 fw-bold rounded-3 shadow-sm transition-all"
+                                style={{ background: "#1e3c72", border: "none" }}
+                                onClick={sendOtp}
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <div className="d-flex align-items-center justify-content-center">
+                                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        Sending OTP...
+                                    </div>
+                                ) : (
+                                    "Request Secure OTP →"
+                                )}
+                            </button>
+                        )}
+
+                        {/* Secondary Viewport Condition Layer Hook: OTP Verification Verification field block */}
+                        {otpSent && (
+                            <div className="animate-fade-in">
+                                <div className="mb-4 p-3 bg-light rounded-3 border border-warning border-opacity-50 text-center">
+                                    <small className="text-muted d-block">OTP sent to reference number:</small>
+                                    <strong className="text-dark">+91 ******{mobileNumber.slice(-4)}</strong>
+                                </div>
+
+                                <div className="mb-4">
+                                    <label className="form-label fw-bold text-secondary small text-uppercase tracking-wider">
+                                        Enter 6-Digit Verification Token
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="form-control form-control-lg bg-light text-center fw-black tracking-widest border-2"
+                                        placeholder="· · · · · ·"
+                                        inputMode="numeric"
+                                        maxLength="6"
+                                        disabled={loading}
+                                        value={otp}
+                                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                                        style={{ fontSize: "1.5rem", letterSpacing: "0.5rem" }}
+                                    />
+                                </div>
+
                                 <button
-                                    className="btn btn-primary w-100"
-                                    onClick={sendOtp}
+                                    className="btn btn-success btn-lg w-100 py-3 fw-bold rounded-3 shadow"
+                                    onClick={verifyOtp}
                                     disabled={loading}
                                 >
                                     {loading ? (
-                                        <>
-                                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                            Sending...
-                                        </>
+                                        <div className="d-flex align-items-center justify-content-center">
+                                            <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            Verifying Secure Token...
+                                        </div>
                                     ) : (
-                                        "Send OTP"
+                                        "Verify & Access Dashboard ✔"
                                     )}
                                 </button>
-                            )}
-
-                            {otpSent && (
-                                <>
-                                    <div className="mt-3">
-                                        <label>OTP</label>
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            maxLength="6"
-                                            disabled={loading}
-                                            value={otp} // Autofill hone par yahan value khud dikh jayegi
-                                            onChange={(e) =>
-                                                setOtp(e.target.value.replace(/\D/g, ""))
-                                            }
-                                        />
-                                    </div>
-
-                                    <button
-                                        className="btn btn-success w-100 mt-3"
-                                        onClick={verifyOtp}
+                                
+                                <div className="text-center mt-3">
+                                    <button 
+                                        className="btn btn-link btn-sm text-decoration-none text-muted p-0" 
+                                        onClick={() => { setOtpSent(false); setOtp(""); }}
                                         disabled={loading}
                                     >
-                                        {loading ? (
-                                            <>
-                                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                Verifying...
-                                            </>
-                                        ) : (
-                                            "Verify OTP"
-                                        )}
+                                        ← Change Mobile Number
                                     </button>
-                                </>
-                            )}
-                        </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
+                </div>
+
+                {/* Secure footer branding details block layer */}
+                <div className="text-center mt-4 text-muted small">
+                    <p className="m-0">🔒 End-to-End Encrypted Node Connection</p>
+                    <span className="font-monospace text-uppercase" style={{ fontSize: "0.65rem" }}>Ver. 2026.2.14</span>
                 </div>
             </div>
         </div>
