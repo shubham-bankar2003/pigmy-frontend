@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import Customers from "./pages/Customers";
 import Collections from "./pages/Collections";
 import Reports from "./pages/Reports";
+import Denominations from "./pages/DenominationCounter";
 
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -53,6 +54,15 @@ return (
                 element={
                     <ProtectedRoute>
                         <Reports />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/denominations"
+                element={
+                    <ProtectedRoute>
+                        <Denominations/>
                     </ProtectedRoute>
                 }
             />
