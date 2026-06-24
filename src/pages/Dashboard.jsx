@@ -61,7 +61,7 @@ export default function Dashboard() {
             <div className="row justify-content-center g-4">
                 
                 {/* Customers Card */}
-                <div className="col-12 col-sm-12 col-md-6 col-lg-4">
+                <div className="col-12 col-sm-6 col-lg-3">
                     <div className="card shadow border-0 h-100 text-center">
                         <div className="card-body d-flex flex-column">
                             <h3 className="mb-3">Customers</h3>
@@ -80,7 +80,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Collections Card */}
-                <div className="col-12 col-sm-12 col-md-6 col-lg-4">
+                <div className="col-12 col-sm-6 col-lg-3">
                     <div className="card shadow border-0 h-100 text-center">
                         <div className="card-body d-flex flex-column">
                             <h3 className="mb-3">Collections</h3>
@@ -99,7 +99,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Reports Card */}
-                <div className="col-12 col-sm-12 col-md-6 col-lg-4">
+                <div className="col-12 col-sm-6 col-lg-3">
                     <div className="card shadow border-0 h-100 text-center">
                         <div className="card-body d-flex flex-column">
                             <h3 className="mb-3">Reports</h3>
@@ -112,6 +112,25 @@ export default function Dashboard() {
                                 onClick={() => navigate('/reports')}
                             >
                                 Open Reports
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Currency Denominations Card */}
+                <div className="col-12 col-sm-6 col-lg-3">
+                    <div className="card shadow border-0 h-100 text-center">
+                        <div className="card-body d-flex flex-column">
+                            <h3 className="mb-3">Denominations</h3>
+                            <p className="text-muted flex-grow-1">
+                                Count and Verify Physical Notes Breakdown
+                            </p>
+                            <button
+                                className="btn btn-info text-white w-100"
+                                disabled={isLoggingOut}
+                                onClick={() => navigate('/denominations')}
+                            >
+                                Open Counter
                             </button>
                         </div>
                     </div>
