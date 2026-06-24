@@ -11,9 +11,8 @@ export default function Reports() {
     const [mobile, setMobile] = useState("");
     const [data, setData] = useState([]);
 
-    // Pagination States for separate tables
-    const [cashPage, setCashPage] = useState(1);
-    const [onlinePage, setOnlinePage] = useState(1);
+    // Consolidated Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
     // Loading State for distinct actions
@@ -42,8 +41,7 @@ export default function Reports() {
         try {
             const response = await api.get(`/api/report/date/${date}`);
             setData(response.data.data);
-            setCashPage(1); // Reset pagination on fresh load
-            setOnlinePage(1);
+            setCurrentPage(1); // Reset pagination on fresh load
             toast.success("Reports Loaded Successfully");
         } catch (error) {
             console.log(error);
@@ -68,7 +66,7 @@ export default function Reports() {
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement("a");
             link.href = url;
-            link.setAttribute("download", `Pigmy_Report_${date}.xlsx`);
+            link.setAttribute("download", `Pigmy_Consolidated_Report_${date}.xlsx`);
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -81,6 +79,49 @@ export default function Reports() {
             setLoadingAction("");
         }
     };
+
+    // --- CONSOLIDATED CALCULATIONS & AGGREGATION ---
+    const cashTotal = data
+        .filter(item => item.payment_mode === "Cash")
+        .reduce((sum, item) => sum + Number(item.amount), 0);
+
+    const onlineTotal = data
+        .filter(item => item.payment_mode !== "Cash")
+        .reduce((sum, item) => sum + Number(item.amount), 0);
+
+    const grandTotal = cashTotal + onlineTotal;
+
+    // Grouping raw data by Customer Name to combine Cash and Online entries into one row
+    const groupedData = Object.values(
+        data.reduce((acc, item) => {
+            const name = item.customer_name;
+            const amount = Number(item.amount);
+            const isCash = item.payment_mode === "Cash";
+
+            if (!acc[name]) {
+                acc[name] = {
+                    customer_name: name,
+                    cashAmount: 0,
+                    onlineAmount: 0,
+                    totalAmount: 0
+                };
+            }
+
+            if (isCash) {
+                acc[name].cashAmount += amount;
+            } else {
+                acc[name].onlineAmount += amount;
+            }
+            acc[name].totalAmount += amount;
+
+            return acc;
+        }, {})
+    );
+
+    // Table Pagination Calculations using grouped data
+    const totalPages = Math.ceil(groupedData.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedData = groupedData.slice(startIndex, startIndex + itemsPerPage);
 
     const sendWhatsApp = async () => {
         if (!date) {
@@ -98,15 +139,37 @@ export default function Reports() {
         try {
             const response = await api.post("/api/report/send-whatsapp", {
                 date,
-                mobile
+                mobile,
+                summary: {
+                    cashTotal,
+                    onlineTotal,
+                    grandTotal,
+                    totalRecords: groupedData.length
+                }
             });
 
-            const whatsappUrl =
-                `https://wa.me/${mobile}?text=` +
-                encodeURIComponent(response.data.message);
+            let messageText = `*📊 CONSOLIDATED PIGMY REPORT*\n`;
+            messageText += `📅 *Date:* ${date}\n`;
+            messageText += `------------------------------------------\n\n`;
+            
+            messageText += `*👤 Customer Breakdown:*\n`;
+            groupedData.forEach((item, index) => {
+                const cash = item.cashAmount > 0 ? `₹${item.cashAmount}` : "-";
+                const online = item.onlineAmount > 0 ? `₹${item.onlineAmount}` : "-";
+                messageText += `${index + 1}. *${item.customer_name}*\n   • Cash: ${cash} | Online: ${online} | Total: ₹${item.totalAmount}\n`;
+            });
+
+            messageText += `\n------------------------------------------\n`;
+            messageText += `💵 *Total Cash:* ₹${cashTotal}\n`;
+            messageText += `📱 *Total Online:* ₹${onlineTotal}\n`;
+            messageText += `⭐ *GRAND TOTAL:* ₹${grandTotal}\n`;
+            messageText += `------------------------------------------\n`;
+            messageText += `_Generated automatically via Pigmy System._`;
+
+            const whatsappUrl = `https://wa.me/${mobile}?text=${encodeURIComponent(messageText)}`;
 
             window.open(whatsappUrl, "_blank");
-            toast.success("Redirecting to WhatsApp...");
+            toast.success("Redirecting to WhatsApp... Check message format.");
         } catch (error) {
             console.log(error);
             toast.error("Failed To Send Report");
@@ -115,31 +178,12 @@ export default function Reports() {
         }
     };
 
-    // --- DATA SPLITTING & CALCULATIONS ---
-    const cashData = data.filter(item => item.payment_mode === "Cash");
-    const onlineData = data.filter(item => item.payment_mode !== "Cash");
-
-    const cashTotal = cashData.reduce((sum, item) => sum + Number(item.amount), 0);
-    const onlineTotal = onlineData.reduce((sum, item) => sum + Number(item.amount), 0);
-    const grandTotal = cashTotal + onlineTotal;
-
-    // Cash Pagination
-    const totalCashPages = Math.ceil(cashData.length / itemsPerPage);
-    const cashStartIndex = (cashPage - 1) * itemsPerPage;
-    const paginatedCashData = cashData.slice(cashStartIndex, cashStartIndex + itemsPerPage);
-
-    // Online Pagination
-    const totalOnlinePages = Math.ceil(onlineData.length / itemsPerPage);
-    const onlineStartIndex = (onlinePage - 1) * itemsPerPage;
-    const paginatedOnlineData = onlineData.slice(onlineStartIndex, onlineStartIndex + itemsPerPage);
-
     return (
         <div className="container py-4">
-            {/* Toast System Global Container */}
             <ToastContainer position="top-right" autoClose={3000} />
 
             <div className="d-flex justify-content-between align-items-center mb-4">
-                <h2 className="mb-0">Split Reports</h2>
+                <h2 className="mb-0">Consolidated Reports</h2>
                 <button 
                     className="btn btn-secondary" 
                     onClick={() => navigate("/")}
@@ -227,172 +271,88 @@ export default function Reports() {
                 </div>
             </div>
 
-            {/* Global Aggregations Summary */}
-            {data.length > 0 && (
-                <div className="card bg-light border-0 shadow-sm mt-4">
-                    <div className="card-body py-3 d-flex flex-wrap justify-content-between align-items-center gap-3">
-                        <div>
-                            <span className="text-muted small uppercase fw-bold d-block">Combined Overview</span>
-                            <span className="fs-5 fw-bold text-dark">Total Consolidated Entries: {data.length}</span>
-                        </div>
-                        <div className="text-end">
-                            <span className="text-muted small uppercase fw-bold d-block">Grand Aggregate Total</span>
-                            <span className="fs-4 fw-black text-primary">₹ {grandTotal}</span>
-                        </div>
-                    </div>
+            {/* Unified Table Section */}
+            <div className="card shadow border-0 mt-4">
+                <div className="card-header bg-dark text-white py-3">
+                    <h5 className="mb-0">📝 Unified Ledger Table</h5>
                 </div>
-            )}
-
-            <div className="row mt-2">
-                {/* Cash Collections Segment */}
-                <div className="col-12 col-xl-6 mt-3">
-                    <div className="card shadow border-0 h-100">
-                        <div className="card-header bg-primary text-white py-3">
-                            <div className="d-flex justify-content-between align-items-center">
-                                <h5 className="mb-0">💵 Cash Ledger</h5>
-                                <div className="text-end">
-                                    <span className="d-block small">Records: {cashData.length}</span>
-                                    <strong className="fs-6">Subtotal: ₹ {cashTotal}</strong>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="card-body">
-                            <div className="table-responsive">
-                                <table className="table table-bordered table-hover mb-0">
-                                    <thead className="table-light">
-                                        <tr>
-                                            <th>Customer Name</th>
-                                            <th>Amount</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {loadingAction === "load" ? (
-                                            <tr>
-                                                <td colSpan="2" className="text-center py-4">
-                                                    <div className="spinner-border text-primary spinner-border-sm" role="status"></div>
+                <div className="card-body p-0">
+                    <div className="table-responsive">
+                        <table className="table table-striped table-bordered hover mb-0">
+                            <thead className="table-light">
+                                <tr>
+                                    <th>Customer Name</th>
+                                    <th>Cash Payment</th>
+                                    <th>Online Payment</th>
+                                    <th className="text-end">Total Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loadingAction === "load" ? (
+                                    <tr>
+                                        <td colSpan="4" className="text-center py-4">
+                                            <div className="spinner-border text-primary spinner-border-sm" role="status"></div>
+                                        </td>
+                                    </tr>
+                                ) : paginatedData.length > 0 ? (
+                                    paginatedData.map((item, index) => {
+                                        return (
+                                            <tr key={index}>
+                                                <td className="fw-medium">{item.customer_name}</td>
+                                                <td className="text-primary">
+                                                    {item.cashAmount > 0 ? `₹ ${item.cashAmount}` : "-"}
                                                 </td>
-                                            </tr>
-                                        ) : paginatedCashData.length > 0 ? (
-                                            paginatedCashData.map((item, index) => (
-                                                <tr key={index}>
-                                                    <td>{item.customer_name}</td>
-                                                    <td className="text-primary fw-medium">₹ {item.amount}</td>
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan="2" className="text-center py-3 text-muted">
-                                                    No Cash Transactions Found
+                                                <td className="text-success">
+                                                    {item.onlineAmount > 0 ? `₹ ${item.onlineAmount}` : "-"}
                                                 </td>
+                                                <td className="text-end fw-bold">₹ {item.totalAmount}</td>
                                             </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            {cashData.length > 0 && (
-                                <div className="d-flex justify-content-between align-items-center mt-3">
-                                    <span className="small text-muted">Page {cashPage} of {totalCashPages || 1}</span>
-                                    <div className="d-flex gap-1">
-                                        <button
-                                            className="btn btn-outline-secondary btn-sm px-2 py-1"
-                                            disabled={cashPage === 1 || loadingAction !== ""}
-                                            onClick={() => setCashPage(cashPage - 1)}
-                                        >
-                                            Prev
-                                        </button>
-                                        <button
-                                            className="btn btn-outline-secondary btn-sm px-2 py-1"
-                                            disabled={cashPage === totalCashPages || totalCashPages === 0 || loadingAction !== ""}
-                                            onClick={() => setCashPage(cashPage + 1)}
-                                        >
-                                            Next
-                                        </button>
-                                    </div>
-                                </div>
+                                        );
+                                    })
+                                ) : (
+                                    <tr>
+                                        <td colSpan="4" className="text-center py-3 text-muted">
+                                            No Transaction Records Found. Select a date and click Load Report.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                            {groupedData.length > 0 && (
+                                <tfoot className="table-dark fw-bold">
+                                    <tr>
+                                        <td>Summary Totals</td>
+                                        <td className="text-info">₹ {cashTotal}</td>
+                                        <td className="text-warning">₹ {onlineTotal}</td>
+                                        <td className="text-end text-success fs-5">₹ {grandTotal}</td>
+                                    </tr>
+                                </tfoot>
                             )}
-                        </div>
+                        </table>
                     </div>
                 </div>
-
-                {/* Online Collections Segment */}
-                <div className="col-12 col-xl-6 mt-3">
-                    <div className="card shadow border-0 h-100">
-                        <div className="card-header bg-success text-white py-3">
-                            <div className="d-flex justify-content-between align-items-center">
-                                <h5 className="mb-0">📱 Online Ledger</h5>
-                                <div className="text-end">
-                                    <span className="d-block small">Records: {onlineData.length}</span>
-                                    <strong className="fs-6">Subtotal: ₹ {onlineTotal}</strong>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="card-body">
-                            <div className="table-responsive">
-                                <table className="table table-bordered table-hover mb-0">
-                                    <thead className="table-light">
-                                        <tr>
-                                            <th>Customer Name</th>
-                                            <th>Amount</th>
-                                            <th>Method</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {loadingAction === "load" ? (
-                                            <tr>
-                                                <td colSpan="3" className="text-center py-4">
-                                                    <div className="spinner-border text-success spinner-border-sm" role="status"></div>
-                                                </td>
-                                            </tr>
-                                        ) : paginatedOnlineData.length > 0 ? (
-                                            paginatedOnlineData.map((item, index) => (
-                                                <tr key={index}>
-                                                    <td>{item.customer_name}</td>
-                                                    <td className="text-success fw-medium">₹ {item.amount}</td>
-                                                    <td>
-                                                        <span className="badge bg-outline-success text-success border border-success px-2 py-1">
-                                                            {item.payment_mode}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan="3" className="text-center py-3 text-muted">
-                                                    No Online Transactions Found
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            {onlineData.length > 0 && (
-                                <div className="d-flex justify-content-between align-items-center mt-3">
-                                    <span className="small text-muted">Page {onlinePage} of {totalOnlinePages || 1}</span>
-                                    <div className="d-flex gap-1">
-                                        <button
-                                            className="btn btn-outline-secondary btn-sm px-2 py-1"
-                                            disabled={onlinePage === 1 || loadingAction !== ""}
-                                            onClick={() => setOnlinePage(onlinePage - 1)}
-                                        >
-                                            Prev
-                                        </button>
-                                        <button
-                                            className="btn btn-outline-secondary btn-sm px-2 py-1"
-                                            disabled={onlinePage === totalOnlinePages || totalOnlinePages === 0 || loadingAction !== ""}
-                                            onClick={() => setOnlinePage(onlinePage + 1)}
-                                        >
-                                            Next
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
+                
+                {/* Pagination Controls */}
+                {groupedData.length > 0 && (
+                    <div className="card-footer d-flex justify-content-between align-items-center bg-white border-top-0 py-3">
+                        <span className="small text-muted">Page {currentPage} of {totalPages || 1} (Total: {groupedData.length} records)</span>
+                        <div className="d-flex gap-1">
+                            <button
+                                className="btn btn-outline-secondary btn-sm px-3"
+                                disabled={currentPage === 1 || loadingAction !== ""}
+                                onClick={() => setCurrentPage(currentPage - 1)}
+                            >
+                                Prev
+                            </button>
+                            <button
+                                className="btn btn-outline-secondary btn-sm px-3"
+                                disabled={currentPage === totalPages || totalPages === 0 || loadingAction !== ""}
+                                onClick={() => setCurrentPage(currentPage + 1)}
+                            >
+                                Next
+                            </button>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );
