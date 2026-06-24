@@ -16,12 +16,12 @@ export default function DenominationCounter() {
 
     // Bank Note Color Mapping Meta Configuration
     const noteStyles = {
-        500: { stone: "#5d6350", text: "Stone Grey", bgAccent: "rgba(93, 99, 80, 0.12)", border: "#5d6350" },
-        200: { stone: "#d45d12", text: "Bright Yellow-Orange", bgAccent: "rgba(212, 93, 18, 0.12)", border: "#d45d12" },
-        100: { stone: "#755493", text: "Lavender Blue", bgAccent: "rgba(117, 84, 147, 0.12)", border: "#17a2b8" },
-        50: { stone: "#0f7e9b", text: "Fluorescent Blue", bgAccent: "rgba(15, 126, 155, 0.12)", border: "#0f7e9b" },
-        20: { stone: "#a3aa3a", text: "Greenish Yellow", bgAccent: "rgba(163, 170, 58, 0.12)", border: "#a3aa3a" },
-        10: { stone: "#825d45", text: "Chocolate Brown", bgAccent: "rgba(130, 93, 69, 0.12)", border: "#825d45" }
+        500: { stone: "#5d6350", bgAccent: "rgba(93, 99, 80, 0.08)" },
+        200: { stone: "#d45d12", bgAccent: "rgba(212, 93, 18, 0.08)" },
+        100: { stone: "#755493", bgAccent: "rgba(117, 84, 147, 0.08)" },
+        50: { stone: "#0f7e9b", bgAccent: "rgba(15, 126, 155, 0.08)" },
+        20: { stone: "#a3aa3a", bgAccent: "rgba(163, 170, 58, 0.08)" },
+        10: { stone: "#825d45", bgAccent: "rgba(130, 93, 69, 0.08)" }
     };
 
     const handleInputChange = (note, val) => {
@@ -43,132 +43,108 @@ export default function DenominationCounter() {
     }, 0);
 
     return (
-        <div className="container py-4">
+        <div className="d-flex flex-column min-vh-100 bg-light" style={{ minHeight: "100vh", pb: "80px" }}>
             
-            {/* Top Vault Control Strip */}
-            <div className="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-                <div className="d-flex align-items-center">
-                    <button className="btn btn-light border me-3 shadow-sm px-3" onClick={() => navigate(-1)}>
-                        🏦 Back
+            {/* Top Compact Fixed Header Strip */}
+            <div className="bg-dark text-white px-3 py-2 sticky-top shadow-sm">
+                <div className="d-flex justify-content-between align-items-center">
+                    <div className="d-flex align-items-center">
+                        <button className="btn btn-sm btn-outline-light me-2 px-2 py-1" onClick={() => navigate(-1)}>
+                            ← Back
+                        </button>
+                        <div>
+                            <h6 className="fw-bold m-0" style={{ fontSize: "0.95rem" }}>Vault Counter</h6>
+                            <span className="font-monospace text-white-50" style={{ fontSize: "0.65rem" }}>INR REGISTER</span>
+                        </div>
+                    </div>
+                    <button className="btn btn-danger btn-sm px-2 py-1" style={{ fontSize: "0.75rem" }} onClick={clearAll}>
+                        Reset
                     </button>
-                    <div>
-                        <h2 className="fw-bold m-0 text-dark">Cash Vault Register</h2>
-                        <small className="text-muted text-uppercase tracking-wider">Reserve Bank Currency Desk</small>
-                    </div>
                 </div>
-                <button className="btn btn-outline-danger btn-sm px-3 shadow-sm" onClick={clearAll}>
-                    🔄 Clear Fields
-                </button>
             </div>
 
-            {/* Main Application Matrix viewport */}
-            <div className="row g-4">
-                
-                {/* Note Counters Panel */}
-                <div className="col-12 col-lg-7">
-                    <div className="card shadow border-0 p-4 bg-white">
-                        <div className="d-flex justify-content-between align-items-center mb-3">
-                            <h5 className="fw-bold text-dark m-0">Physical Denomination Input</h5>
-                            <span className="badge bg-secondary tracking-widest text-uppercase">INR Values Only</span>
-                        </div>
-                        
-                        {Object.keys(counts)
-                            .sort((a, b) => b - a)
-                            .map((note) => {
-                                const rowCalculatedAmount = Number(note) * Number(counts[note] || 0);
-                                const currentStyle = noteStyles[note];
+            {/* Live Sticky Summary Dashboard Module */}
+            <div className="bg-white border-bottom shadow-sm px-3 py-3 text-center">
+                <span className="text-muted text-uppercase tracking-wider font-monospace d-block mb-1" style={{ fontSize: "0.7rem", fontWeight: "600" }}>
+                    Total Amount ({totalNotes} Pcs)
+                </span>
+                <h2 className="fw-black text-primary font-monospace m-0" style={{ fontSize: "2rem", letterSpacing: "-0.5px" }}>
+                    ₹ {finalGrandTotal.toLocaleString("en-IN")}
+                </h2>
+            </div>
 
-                                return (
-                                    <div 
-                                        className="row align-items-center g-2 p-2 mb-3 rounded-3 border-start border-4" 
-                                        key={note}
-                                        style={{ 
-                                            backgroundColor: counts[note] > 0 ? currentStyle.bgAccent : "#f8f9fa",
-                                            borderColor: currentStyle.stone
-                                        }}
-                                    >
-                                        {/* Premium Bank Note Simulator Badge Layout */}
-                                        <div className="col-4 col-sm-3">
-                                            <div 
-                                                className="text-center py-2 fw-bold rounded shadow-sm text-white text-nowrap"
-                                                style={{ 
-                                                    backgroundColor: currentStyle.stone,
-                                                    fontSize: "1.1rem",
-                                                    letterSpacing: "1px"
-                                                }}
-                                            >
-                                                ₹ {note}
-                                            </div>
-                                        </div>
+            {/* Compact Denomination Field Matrix Wrapper */}
+            <div className="container px-2 py-3 flex-grow-1" style={{ marginBottom: "75px" }}>
+                <div className="card border-0 shadow-sm rounded-3 p-2 bg-white">
+                    {Object.keys(counts)
+                        .sort((a, b) => b - a)
+                        .map((note) => {
+                            const rowCalculatedAmount = Number(note) * Number(counts[note] || 0);
+                            const currentStyle = noteStyles[note];
+                            const hasValue = counts[note] > 0;
 
-                                        <div className="col-1 text-center font-monospace text-muted fw-bold">×</div>
-
-                                        {/* Controlled Numeric Entry Point Field */}
-                                        <div className="col-4 col-sm-4">
-                                            <input
-                                                type="text"
-                                                className="form-control text-center fw-bold form-control-lg border-2 shadow-sm"
-                                                style={{ focusColor: currentStyle.stone }}
-                                                placeholder="0"
-                                                value={counts[note]}
-                                                onChange={(e) => handleInputChange(note, e.target.value)}
-                                            />
-                                        </div>
-
-                                        <div className="col-1 text-center font-monospace text-muted">=</div>
-
-                                        {/* Total Sub value reflection */}
-                                        <div className="col-2 col-sm-3 text-end fw-bold text-dark fs-5 font-monospace pr-2">
-                                            {rowCalculatedAmount.toLocaleString("en-IN")}
-                                        </div>
+                            return (
+                                <div 
+                                    className="d-flex align-items-center justify-content-between p-2 mb-2 rounded border-start border-3" 
+                                    key={note}
+                                    style={{ 
+                                        backgroundColor: hasValue ? currentStyle.bgAccent : "#f8f9fa",
+                                        borderColor: currentStyle.stone,
+                                        height: "52px"
+                                    }}
+                                // Added strict height restrictions to avoid desktop view blow-outs
+                                >
+                                    {/* Denomination Indicator Pin */}
+                                    <div style={{ width: "65px" }}>
+                                        <span 
+                                            className="badge d-block py-2 fw-bold font-monospace shadow-sm"
+                                            style={{ backgroundColor: currentStyle.stone, fontSize: "0.9rem" }}
+                                        >
+                                            ₹{note}
+                                        </span>
                                     </div>
-                                );
-                            })}
-                    </div>
+
+                                    <div className="text-muted small font-monospace px-1">×</div>
+
+                                    {/* Numeric Input Element Wrapper Area */}
+                                    <div style={{ width: "100px" }}>
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            className="form-control form-control-sm text-center fw-bold font-monospace shadow-sm py-2"
+                                            placeholder="0"
+                                            value={counts[note]}
+                                            onChange={(e) => handleInputChange(note, e.target.value)}
+                                            style={{ fontSize: "1rem", borderColor: hasValue ? currentStyle.stone : "#ced4da" }}
+                                        />
+                                    </div>
+
+                                    <div className="text-muted small font-monospace px-1">=</div>
+
+                                    {/* Line Aggregate Output Target */}
+                                    <div className="text-end fw-bold text-dark font-monospace flex-grow-1 px-1" style={{ fontSize: "0.95rem" }}>
+                                        {rowCalculatedAmount.toLocaleString("en-IN")}
+                                    </div>
+                                </div>
+                            );
+                        })}
                 </div>
-
-                {/* Bank Teller Sticky Total Summary Panel Block */}
-                <div className="col-12 col-lg-5">
-                    <div className="card shadow border-0 h-100 d-flex flex-column justify-content-between overflow-hidden">
-                        
-                        {/* Top Summary Branding Header */}
-                        <div className="p-4 bg-dark text-white">
-                            <div className="d-flex justify-content-between align-items-center mb-2">
-                                <span className="small text-uppercase tracking-wider text-muted">Audit Verification Summary</span>
-                                <span className="badge bg-success px-2 py-1">LIVE</span>
-                            </div>
-                            <hr className="border-secondary my-2" />
-                            
-                            <div className="d-flex justify-content-between py-2 border-bottom border-secondary border-opacity-25">
-                                <span className="text-muted">Total counted bundles:</span>
-                                <strong className="text-info fs-5 font-monospace">{totalNotes} pcs</strong>
-                            </div>
-                        </div>
-
-                        {/* Large Core Banking Financial Counter Node Showcase */}
-                        <div className="p-5 bg-light text-center border-bottom my-auto">
-                            <span className="small text-uppercase text-muted tracking-widest d-block mb-1 fw-bold">
-                                Consolidated Balance Value
-                            </span>
-                            <h1 className="display-3 fw-black text-dark m-0 font-monospace text-truncate">
-                                ₹ {finalGrandTotal.toLocaleString("en-IN")}
-                            </h1>
-                        </div>
-
-                        {/* Interactive Bank-Teller Actions Layer Container */}
-                        <div className="p-4 bg-white border-top">
-                            <button 
-                                className="btn btn-success btn-lg w-100 py-3 font-monospace fw-bold tracking-wide shadow"
-                                disabled={finalGrandTotal === 0}
-                                onClick={() => alert(`Verified Vault Entry: ₹ ${finalGrandTotal.toLocaleString("en-IN")}`)}
-                            >
-                                📥 POST TO CASH LEDGER
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
             </div>
+
+            {/* Bottom Screen Native APK Style Action Drawer */}
+            <div className="bg-white border-top p-2 fixed-bottom shadow-lg w-100 left-0" style={{ zIndex: "1040" }}>
+                <div className="container p-0">
+                    <button 
+                        className="btn btn-success w-100 py-2.5 fw-bold tracking-wide shadow-sm d-flex align-items-center justify-content-center"
+                        disabled={finalGrandTotal === 0}
+                        onClick={() => alert(`Saved Vault Ledger Entry: ₹ ${finalGrandTotal.toLocaleString("en-IN")}`)}
+                        style={{ fontSize: "1rem", borderRadius: "8px" }}
+                    >
+                        📥 POST CASH ENTRY TO LEDGER
+                    </button>
+                </div>
+            </div>
+
         </div>
     );
 }
